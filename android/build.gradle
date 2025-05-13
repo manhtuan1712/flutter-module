@@ -1,0 +1,87 @@
+// This file is created automatically by Flutter tooling.
+// Used for publishing. DO NOT EDIT.
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        // The Android Gradle Plugin
+        classpath 'com.android.tools.build:gradle:7.3.0'
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+// Add the maven-publish plugin
+apply plugin: 'maven-publish'
+
+group = 'com.example'
+version = '1.0.0'
+
+// Gradle task to generate the AAR for publishing
+task generateAar(type: Copy) {
+    dependsOn ':flutter:assembleRelease'
+    from "${project.buildDir}/../flutter/build/outputs/aar/"
+    include "flutter-release.aar"
+    into "${project.buildDir}/outputs/aar/"
+    rename "flutter-release.aar", "flutter_module-${version}.aar"
+}
+
+// Configure the publishing extension
+publishing {
+    publications {
+        flutterModule(MavenPublication) {
+            artifact "${project.buildDir}/outputs/aar/flutter_module-${version}.aar"
+
+            groupId = project.group
+            artifactId = 'flutter_module'
+            version = project.version
+
+            pom {
+                name = 'Flutter Module'
+                description = 'A Flutter module for integration with native Android apps'
+                url = 'https://github.com/REPLACE_WITH_YOUR_USERNAME/REPLACE_WITH_YOUR_REPO'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'REPLACE_WITH_YOUR_USERNAME'
+                        name = 'REPLACE_WITH_YOUR_NAME'
+                        email = 'REPLACE_WITH_YOUR_EMAIL'
+                    }
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            name = "localRepo"
+            url = "${project.buildDir}/repo"
+        }
+        // GitHub Packages Repository
+        maven {
+            name = "GitHubPackages"
+            url = "https://maven.pkg.github.com/REPLACE_WITH_YOUR_USERNAME/REPLACE_WITH_YOUR_REPO"
+            credentials {
+                username = System.getenv("GITHUB_USERNAME")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+}
+
+// Make the generateAar task a dependency of the publish task
+tasks.withType(PublishToMavenRepository) {
+    dependsOn generateAar
+} 
