@@ -1,144 +1,72 @@
-# Publishing Flutter Module to Maven Repositories
+# Publishing the Flutter Module iOS Framework
 
-This guide explains how to publish your Flutter module to various Maven repositories.
+This guide explains how to publish the Flutter module iOS framework to GitHub releases for easy integration by iOS developers.
 
-## Local Maven Repository
+## Prerequisites
 
-The simplest way to publish your Flutter module is to a local Maven repository:
+1. **GitHub Account**: You need a GitHub account with permission to publish releases
+2. **Personal Access Token**: Create a token with `repo` scope at https://github.com/settings/tokens
+3. **Flutter Environment**: Make sure Flutter is installed and available in your PATH
 
-1. Run the included script:
+## Environment Setup
+
+Set the required environment variables:
+
    ```bash
-   ./publish_module.sh
-   ```
+export GITHUB_USERNAME="your_github_username"
+export GITHUB_TOKEN="your_personal_access_token"
+```
 
-2. The module will be published to: `flutter_module/android/build/repo/`
+## Publishing Process
 
-3. In the consuming Android project, add this repository to `settings.gradle`:
-   ```groovy
-   repositories {
-       maven { url 'file:///path/to/flutter_module/android/build/repo' }
-   }
-   ```
+### 1. Build and Package the Framework
 
-4. In your app's `build.gradle`, add the dependency:
-   ```groovy
-   dependencies {
-       implementation 'com.example:flutter_module:1.0.0'
-   }
-   ```
+The `create_ios_framework.sh` script handles:
+- Building the Flutter module as an iOS framework
+- Processing frameworks to avoid duplication
+- Creating the podspec file
+- Adding a runtime cleanup script
+- Packaging everything into a distributable ZIP file
 
-## GitHub Packages
+Run it manually (if needed):
 
-To publish to GitHub Packages:
-
-1. Open `flutter_module/android/build.gradle` and uncomment the GitHub Packages repository section.
-
-2. Set up environment variables for your GitHub credentials:
    ```bash
-   export GITHUB_USERNAME=your_username
-   export GITHUB_TOKEN=your_personal_access_token
-   ```
+./create_ios_framework.sh
+```
 
-3. Run the publish command:
+### 2. Publish to GitHub
+
+The `publish_module_ios.sh` script handles:
+- Running the build script
+- Creating a GitHub release
+- Uploading the framework package
+- Publishing the podspec file
+
+Run:
+
    ```bash
-   cd flutter_module/android
-   ./gradlew publishFlutterModulePublicationToGitHubPackagesRepository
+./publish_module_ios.sh
+```
+
+## Integration for iOS Developers
+
+iOS developers can integrate the framework using CocoaPods:
+
+```ruby
+pod 'FlutterModuleFramework', :podspec => 'https://github.com/YOUR_USERNAME/flutter-module/releases/download/v1.0.0/FlutterModuleFramework.podspec'
    ```
 
-4. In the consuming project's `settings.gradle`, add:
-   ```groovy
-   repositories {
-       maven {
-           name = "GitHubPackages"
-           url = "https://maven.pkg.github.com/yourusername/flutter_module"
-           credentials {
-               username = findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME")
-               password = findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
-           }
-       }
-   }
-   ```
+## Fixing Duplicate Framework Issues
 
-## Maven Central
+If integration issues occur, iOS developers can use the `fix_xcode_project.rb` script:
 
-To publish to Maven Central:
-
-1. Create a Sonatype OSSRH account if you don't have one.
-
-2. Add the required plugins to `flutter_module/android/build.gradle`:
-   ```groovy
-   apply plugin: 'signing'
-   ```
-
-3. Add the signing configuration:
-   ```groovy
-   signing {
-       sign publishing.publications.flutterModule
-   }
-   ```
-
-4. Add the Maven Central repository:
-   ```groovy
-   repositories {
-       maven {
-           name = "OSSRH"
-           url = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
-           credentials {
-               username = System.getenv("OSSRH_USERNAME")
-               password = System.getenv("OSSRH_PASSWORD")
-           }
-       }
-   }
-   ```
-
-5. Set up environment variables:
    ```bash
-   export OSSRH_USERNAME=your_sonatype_username
-   export OSSRH_PASSWORD=your_sonatype_password
+ruby fix_xcode_project.rb -p /path/to/YourProject.xcodeproj
    ```
 
-6. Run the publish command:
+## Version Management
+
+Update the version in `publish_module_ios.sh` when releasing new versions:
+
    ```bash
-   cd flutter_module/android
-   ./gradlew publishFlutterModulePublicationToOSSRHRepository
-   ```
-
-## JitPack
-
-JitPack makes publishing much easier:
-
-1. Push your Flutter module to GitHub.
-
-2. Make sure the root `build.gradle` includes JitPack's repository:
-   ```groovy
-   repositories {
-       maven { url 'https://jitpack.io' }
-   }
-   ```
-
-3. Tag a release in your GitHub repository.
-
-4. JitPack will build the module when first requested.
-
-5. In the consuming project, add JitPack to `settings.gradle`:
-   ```groovy
-   repositories {
-       maven { url 'https://jitpack.io' }
-   }
-   ```
-
-6. Add the dependency:
-   ```groovy
-   dependencies {
-       implementation 'com.github.yourusername:flutter_module:tag'
-   }
-   ```
-
-## Versioning
-
-When updating your Flutter module, remember to increment the version in `android/build.gradle`:
-
-```groovy
-group = 'com.example'
-version = '1.0.0' // Increment this for new releases
-``` 
+VERSION="1.0.0"  # Change this for each release 

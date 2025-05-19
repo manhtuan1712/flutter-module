@@ -1,0 +1,105 @@
+.DS_Store
+.dart_tool/
+
+.pub/
+
+.idea/
+.vagrant/
+.sconsign.dblite
+.svn/
+
+migrate_working_dir/
+
+*.swp
+profile
+
+DerivedData/
+
+.generated/
+
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+
+!default.pbxuser
+!default.mode1v3
+!default.mode2v3
+!default.perspectivev3
+
+xcuserdata
+
+*.moved-aside
+
+*.pyc
+*sync/
+Icon?
+.tags*
+
+build/
+.android/
+.ios/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# iOS wrapper ignores
+## Build generated
+ios_wrapper/build/
+ios_wrapper/DerivedData/
+scripts/ios/dist/
+scripts/ios/ios_wrapper/build/
+
+## Various settings
+xcuserdata/
+
+## Other
+*.xccheckout
+*.xcscmblueprint
+*.xcuserstate
+*.DS_Store
+
+## iOS Framework files
+scripts/ios/dist/ios_framework/
+
+## Swift Package
+.swiftpm/
+
+## CocoaPods
+ios_wrapper/Pods/
+scripts/ios/ios_wrapper/Pods/
+
+# Android wrapper ignores
+## Build files
+flutter_wrapper_template/build/
+flutter_wrapper_template/.gradle/
+flutter_wrapper_template/gradle/
+flutter_wrapper_template/gradlew
+flutter_wrapper_template/gradlew.bat
+flutter_wrapper_template/local.properties
+flutter_wrapper_template/.idea/
+flutter_wrapper_template/*.iml
+flutter_wrapper_template/app/build/
+flutter_wrapper_template/app/release/
+
+## Distribution files
+dist/
+*.aar
+*.jar
+*.ap_
+*.aab
+
+# General Flutter/Dart ignores
+.packages
+.pub-cache/
+pubspec.lock
+
+# Generated distribution files
+*.zip
+*.framework
+*.podspec
