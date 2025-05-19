@@ -1,0 +1,170 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.2.2'
+        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.0'
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            url 'https://storage.googleapis.com/download.flutter.io'
+        }
+    }
+}
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'maven-publish'
+
+android {
+    compileSdkVersion 33
+    
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 33
+        versionCode 1
+        versionName "1.0.0"
+    }
+    
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+    
+    lintOptions {
+        disable 'InvalidPackage'
+        abortOnError false
+    }
+    
+    configurations.all {
+        resolutionStrategy {
+            force "org.jetbrains.kotlin:kotlin-stdlib:1.8.0"
+            force "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.0"
+            force "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.0"
+            force "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.0"
+            force "org.jetbrains.kotlin:kotlin-reflect:1.8.0"
+            eachDependency { details ->
+                if (details.requested.group == 'org.jetbrains.kotlin') {
+                    details.useVersion '1.8.0'
+                }
+            }
+        }
+    }
+}
+
+// Function to dynamically find the Flutter engine hash
+def findFlutterEngineHash() {
+    // Use a simpler approach - directly use flutter command
+    try {
+        def result = new ByteArrayOutputStream()
+        exec {
+            workingDir rootProject.projectDir.parent
+            commandLine 'flutter', '--version', '--machine'
+            standardOutput = result
+        }
+        
+        def text = result.toString()
+        def matcher = text =~ /"engineRevision":"([a-f0-9]+)"/
+        if (matcher.find()) {
+            return matcher.group(1)
+        }
+    } catch (Exception e) {
+        println "Error finding Flutter engine hash: ${e.message}"
+    }
+    
+    // If all else fails, use a default hash
+    return "cf56914b326edb0ccb123ffdc60f00060bd513fa"
+}
+
+// Get the engine hash
+def engineHash = findFlutterEngineHash()
+println "Using Flutter engine hash: ${engineHash}"
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.8.0"
+    implementation "androidx.core:core-ktx:1.8.0"
+    implementation "androidx.appcompat:appcompat:1.4.2"
+    
+    // Use api instead of implementation to make Flutter embedding transitive
+    // This ensures any app using the wrapper automatically gets Flutter embedding
+    api "io.flutter:flutter_embedding_release:1.0.0-cf56914b326edb0ccb123ffdc60f00060bd513fa"
+    api "io.flutter:armeabi_v7a_release:1.0.0-cf56914b326edb0ccb123ffdc60f00060bd513fa"
+    api "io.flutter:arm64_v8a_release:1.0.0-cf56914b326edb0ccb123ffdc60f00060bd513fa"
+    api "io.flutter:x86_64_release:1.0.0-cf56914b326edb0ccb123ffdc60f00060bd513fa"
+}
+
+def getGithubUsername() {
+    return project.findProperty('gpr.user') ?: System.getenv("GITHUB_USERNAME")
+}
+
+def getGithubToken() {
+    return project.findProperty('gpr.key') ?: System.getenv("GITHUB_TOKEN")
+}
+
+def getGithubRepoName() {
+    if (project.hasProperty('githubRepoName')) {
+        return project.getProperty('githubRepoName')
+    }
+    return "flutter-module"
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+                
+                groupId = 'com.example.flutter_module'
+                artifactId = 'flutter_wrapper'
+                version = '1.0.0'
+                
+                pom {
+                    name = 'Flutter Module Wrapper'
+                    description = 'A wrapper library for easy Flutter module integration'
+                    url = 'https://github.com/' + getGithubUsername() + '/' + getGithubRepoName()
+                    licenses {
+                        license {
+                            name = 'The Apache License, Version 2.0'
+                            url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        }
+                    }
+                    developers {
+                        developer {
+                            id = getGithubUsername()
+                            name = 'Flutter Developer'
+                        }
+                    }
+                }
+            }
+        }
+        
+        repositories {
+            maven {
+                name = 'GitHubPackages'
+                url = uri("https://maven.pkg.github.com/" + getGithubUsername() + "/" + getGithubRepoName())
+                credentials {
+                    username = getGithubUsername()
+                    password = getGithubToken()
+                }
+            }
+        }
+    }
+}

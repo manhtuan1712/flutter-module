@@ -1,0 +1,2 @@
+include ':flutter'
+project(':flutter').projectDir = new File('../build/host/outputs/repo')

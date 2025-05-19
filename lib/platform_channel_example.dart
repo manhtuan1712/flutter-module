@@ -10,7 +10,7 @@ class PlatformChannelExample extends StatefulWidget {
 
 class _PlatformChannelExampleState extends State<PlatformChannelExample> {
   static const platform = MethodChannel(
-    'com.example.flutter_module/platform_channel',
+    'com.example.flutter_wrapper/platform_channel',
   );
   String _responseFromNative = 'No response yet';
   String _batteryLevel = 'Unknown';
